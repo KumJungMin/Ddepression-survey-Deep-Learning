@@ -1,7 +1,9 @@
 from django.shortcuts import render
 from .models import Post
+from rest_framework.response import  Response
 from .serializers import PostSerializer
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, response
+
 from rest_framework import status, renderers, viewsets
 
 # 데이터 형식 가공
@@ -22,7 +24,8 @@ import csv
     #conda install -c plotly plotly-orca psutil requests
     #pip install ipython
     #pip install notebook
-    #pip install ipywidgets
+    #pip install ipywidgets, matplotlib, sklearn, numpy
+    #pip install pandas
     #pip install psutil requests
     #In most situations, you can omit the call to .show() and allow the figure to display itself.
 #-------------------------------------------------------------------------
@@ -37,9 +40,9 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet): #crud가능
 #-----------------------------------------------------------------------------------
 # 모델의 예측률을 보여주는 api : showmodel
 # https://nachwon.github.io/django-12-post-detail/
-
+# 예측률을 계산하고 -> 데이터베이스의 result에 저장
     @action(detail=True, renderer_classes=[renderers.StaticHTMLRenderer]) 
-    def showmodel(self, *args, **kwargs):
+    def models(self, *args, **kwargs):
         DIR='/Users/corgi/Desktop/cnu/firstrest/post/data'
         train = pd.read_csv(DIR+'/train.csv', delimiter=',')  #  파일 경로를 절대 경로로 할 것
          
@@ -51,7 +54,19 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet): #crud가능
         clf = SVC()
         scoring = 'accuracy'
         score = cross_val_score(clf, train_data, target, cv=k_fold, n_jobs=1, scoring=scoring)
-        return HttpResponse(round(np.mean(score)*100,2))
+        datas = {"result" : round(np.mean(score)*100,2) }
+        serializer = PostSerializer(data=datas)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors)
+        
+    @action( detail=True, renderer_classes=[renderers.StaticHTMLRenderer]) 
+    def showmodels(self, *args, **kwargs):
+        queryset = Post.objects.all()
+        serializer = PostSerializer(queryset, many=True)
+        return Response(serializer.data)
+
         #httpResponse를 할 때는 return을 꼭 해줄 것
 
 #-------------------------------------------------------------------------------------------
@@ -139,7 +154,7 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet): #crud가능
         ])
    
         fig.update_layout(barmode='stack')
-        fig.write_image("/Users/corgi/Desktop/cnu/firstrest/post/data/images/fig_bother.png") #저장할 파일명과 절대 경로  
+        fig.write_image("/Users/corgi/Desktop/cnu/frontend/src/image/fig_bother.png") #저장할 파일명과 절대 경로  
         return HttpResponse(fig.show())
         
 
@@ -207,7 +222,7 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet): #crud가능
         ])
    
         fig.update_layout(barmode='stack')
-        fig.write_image("/Users/corgi/Desktop/cnu/firstrest/post/data/images/fig_noeat.png") #저장할 파일명과 절대 경로  
+        fig.write_image("/Users/corgi/Desktop/cnu/frontend/src/image/fig_noeat.png") #저장할 파일명과 절대 경로  
         return HttpResponse(fig.show())
 
 
@@ -275,7 +290,7 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet): #crud가능
         ])
    
         fig.update_layout(barmode='stack')
-        fig.write_image("/Users/corgi/Desktop/cnu/firstrest/post/data/images/fig_depr.png") #저장할 파일명과 절대 경로  
+        fig.write_image("/Users/corgi/Desktop/cnu/frontend/src/image/fig_depr.png") #저장할 파일명과 절대 경로  
         return HttpResponse(fig.show())
 
 #--------------------------------------------------------------------------------------------
@@ -342,7 +357,7 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet): #crud가능
         ])
    
         fig.update_layout(barmode='stack')
-        fig.write_image("/Users/corgi/Desktop/cnu/firstrest/post/data/images/fig_capa.png") #저장할 파일명과 절대 경로  
+        fig.write_image("/Users/corgi/Desktop/cnu/frontend/src/image/fig_capa.png") #저장할 파일명과 절대 경로  
         return HttpResponse(fig.show())
 
 #--------------------------------------------------------------------------------------------
@@ -409,7 +424,7 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet): #crud가능
         ])
    
         fig.update_layout(barmode='stack')
-        fig.write_image("/Users/corgi/Desktop/cnu/firstrest/post/data/images/fig_anxi.png") #저장할 파일명과 절대 경로  
+        fig.write_image("/Users/corgi/Desktop/cnu/frontend/src/image/fig_anxi.png") #저장할 파일명과 절대 경로  
         return HttpResponse(fig.show())
 
 
@@ -477,7 +492,7 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet): #crud가능
         ])
    
         fig.update_layout(barmode='stack')
-        fig.write_image("/Users/corgi/Desktop/cnu/firstrest/post/data/images/fig_glo.png") #저장할 파일명과 절대 경로  
+        fig.write_image("/Users/corgi/Desktop/cnu/frontend/src/image/fig_glo.png") #저장할 파일명과 절대 경로  
         return HttpResponse(fig.show())
 
 
@@ -545,7 +560,7 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet): #crud가능
         ])
    
         fig.update_layout(barmode='stack')
-        fig.write_image("/Users/corgi/Desktop/cnu/firstrest/post/data/images/fig_hard.png") #저장할 파일명과 절대 경로  
+        fig.write_image("/Users/corgi/Desktop/cnu/frontend/src/image/fig_hard.png") #저장할 파일명과 절대 경로  
         return HttpResponse(fig.show())
 
 #--------------------------------------------------------------------------------------------
@@ -612,7 +627,7 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet): #crud가능
         ])
    
         fig.update_layout(barmode='stack')
-        fig.write_image("/Users/corgi/Desktop/cnu/firstrest/post/data/images/fig_hope.png") #저장할 파일명과 절대 경로  
+        fig.write_image("/Users/corgi/Desktop/cnu/frontend/src/image/fig_hope.png") #저장할 파일명과 절대 경로  
         return HttpResponse(fig.show())
 
 #--------------------------------------------------------------------------------------------
@@ -679,7 +694,7 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet): #crud가능
         ])
    
         fig.update_layout(barmode='stack')
-        fig.write_image("/Users/corgi/Desktop/cnu/firstrest/post/data/images/fig_fail.png") #저장할 파일명과 절대 경로  
+        fig.write_image("/Users/corgi/Desktop/cnu/frontend/src/image/fig_fail.png") #저장할 파일명과 절대 경로  
         return HttpResponse(fig.show())
 
 #--------------------------------------------------------------------------------------------
@@ -746,7 +761,7 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet): #crud가능
         ])
    
         fig.update_layout(barmode='stack')
-        fig.write_image("/Users/corgi/Desktop/cnu/firstrest/post/data/images/fig_fear.png") #저장할 파일명과 절대 경로  
+        fig.write_image("/Users/corgi/Desktop/cnu/frontend/src/image/fig_fear.png") #저장할 파일명과 절대 경로  
         return HttpResponse(fig.show())
 
 #--------------------------------------------------------------------------------------------
@@ -813,7 +828,7 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet): #crud가능
         ])
    
         fig.update_layout(barmode='stack')
-        fig.write_image("/Users/corgi/Desktop/cnu/firstrest/post/data/images/fig_inso.png") #저장할 파일명과 절대 경로  
+        fig.write_image("/Users/corgi/Desktop/cnu/frontend/src/image/fig_inso.png") #저장할 파일명과 절대 경로  
         return HttpResponse(fig.show())
 
 #--------------------------------------------------------------------------------------------
@@ -880,7 +895,7 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet): #crud가능
         ])
    
         fig.update_layout(barmode='stack')
-        fig.write_image("/Users/corgi/Desktop/cnu/firstrest/post/data/images/fig_hap.png") #저장할 파일명과 절대 경로  
+        fig.write_image("/Users/corgi/Desktop/cnu/frontend/src/image/fig_hap.png") #저장할 파일명과 절대 경로  
         return HttpResponse(fig.show())
 
 #--------------------------------------------------------------------------------------------
@@ -947,7 +962,7 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet): #crud가능
         ])
    
         fig.update_layout(barmode='stack')
-        fig.write_image("/Users/corgi/Desktop/cnu/firstrest/post/data/images/fig_qui.png") #저장할 파일명과 절대 경로  
+        fig.write_image("/Users/corgi/Desktop/cnu/frontend/src/image/fig_qui.png") #저장할 파일명과 절대 경로  
         return HttpResponse(fig.show())
 
 #--------------------------------------------------------------------------------------------
@@ -1014,7 +1029,7 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet): #crud가능
         ])
    
         fig.update_layout(barmode='stack')
-        fig.write_image("/Users/corgi/Desktop/cnu/firstrest/post/data/images/fig_alon.png") #저장할 파일명과 절대 경로  
+        fig.write_image("/Users/corgi/Desktop/cnu/frontend/src/image/fig_alon.png") #저장할 파일명과 절대 경로  
         return HttpResponse(fig.show())
 
 #--------------------------------------------------------------------------------------------
@@ -1081,7 +1096,7 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet): #crud가능
         ])
    
         fig.update_layout(barmode='stack')
-        fig.write_image("/Users/corgi/Desktop/cnu/firstrest/post/data/images/fig_cold.png") #저장할 파일명과 절대 경로  
+        fig.write_image("/Users/corgi/Desktop/cnu/frontend/src/image/fig_cold.png") #저장할 파일명과 절대 경로  
         return HttpResponse(fig.show())
 
 #--------------------------------------------------------------------------------------------
@@ -1148,7 +1163,7 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet): #crud가능
         ])
    
         fig.update_layout(barmode='stack')
-        fig.write_image("/Users/corgi/Desktop/cnu/firstrest/post/data/images/fig_fun.png") #저장할 파일명과 절대 경로  
+        fig.write_image("/Users/corgi/Desktop/cnu/frontend/src/image/fig_fun.png") #저장할 파일명과 절대 경로  
         return HttpResponse(fig.show())
 
 #--------------------------------------------------------------------------------------------
@@ -1215,7 +1230,7 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet): #crud가능
         ])
    
         fig.update_layout(barmode='stack')
-        fig.write_image("/Users/corgi/Desktop/cnu/firstrest/post/data/images/fig_cry.png") #저장할 파일명과 절대 경로  
+        fig.write_image("/Users/corgi/Desktop/cnu/frontend/src/image/fig_cry.png") #저장할 파일명과 절대 경로  
         return HttpResponse(fig.show())
 
 #--------------------------------------------------------------------------------------------
@@ -1282,7 +1297,7 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet): #crud가능
         ])
    
         fig.update_layout(barmode='stack')
-        fig.write_image("/Users/corgi/Desktop/cnu/firstrest/post/data/images/fig_sad.png") #저장할 파일명과 절대 경로  
+        fig.write_image("/Users/corgi/Desktop/cnu/frontend/src/image/fig_sad.png") #저장할 파일명과 절대 경로  
         return HttpResponse(fig.show())
 
 #--------------------------------------------------------------------------------------------
@@ -1349,7 +1364,7 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet): #crud가능
         ])
    
         fig.update_layout(barmode='stack')
-        fig.write_image("/Users/corgi/Desktop/cnu/firstrest/post/data/images/fig_hate.png") #저장할 파일명과 절대 경로  
+        fig.write_image("/Users/corgi/Desktop/cnu/frontend/src/image/fig_hate.png") #저장할 파일명과 절대 경로  
         return HttpResponse(fig.show())
 
 #--------------------------------------------------------------------------------------------
@@ -1416,6 +1431,6 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet): #crud가능
         ])
    
         fig.update_layout(barmode='stack')
-        fig.write_image("/Users/corgi/Desktop/cnu/firstrest/post/data/images/fig_tor.png") #저장할 파일명과 절대 경로  
+        fig.write_image("/Users/corgi/Desktop/cnu/frontend/src/image/fig_tor.png") #저장할 파일명과 절대 경로  
         return HttpResponse(fig.show())
 

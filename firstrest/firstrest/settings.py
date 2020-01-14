@@ -39,9 +39,13 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'post',
     'rest_framework',
+    'corsheaders',
+    # 3000포트에서 8000포트로 요청하는 것이므로 추카
+    # pip install django-cors-headers 
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware', #추가
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -51,12 +55,20 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+CORS_ORIGIN_WHITELIST = (   #추가-해당 도메인에서의 요청이 처리됨(개발3000/보이는것8000)
+    'http://localhost:3000',   #수정
+)
+
 ROOT_URLCONF = 'firstrest.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [
+            #장고에게 리액트 프로젝트의 템플릿을 리액트 프로젝트의 빌드 폴더에서 찾으라고 알려준다.
+            #개발한 페이지를 8000번 포트에서 확인할 수 있게 됨
+            os.path.join(BASE_DIR, 'frontend', 'build'),    #추가
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
